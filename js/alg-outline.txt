@@ -1,0 +1,27 @@
+Hey Silver Phantom! A friend and I actually came up with an algorithm for a final project my freshman year of college. The idea was to employ linear algebra, but last year I revamped it. It is rather simple and elegant and I designed it for TI-BASIC (and used it in my TI-Concours contest entry). I described it in a post on omnimaga, so this is pretty much a copy/paste:
+
+A few are curious about my Tic-Tac-Toe algorithm, so here it is. First, I would like to give credit as well to Michael Macie. We designed this last year for a linear algebra project and it is very beautiful indeed I have modified it a bit to make it work even better with matrix row operations.
+
+First: In Tic-Tac-Toe, there are 9 positions and 8 wins. What we did is something that we have seen nowhere else and makes things amazingly less complex. As in, a child with rudimentary math skills might be able to get it. Each position we label as a to i like this:
+a b c
+d e f
+g h i
+
+We then assigned a matrix of win contributions to each position. I changed this to using a row of 8 elements. So, in my example, we can do:
+[[D1,H1,H2,H3,V1,V2,V3,D2]] where D1 is the main diagonal, H1~H3 or horizontal wins, V1~V3 are vertical wins, and D2 is the other diagonal. If a position corresponds to a win, give it a 1, like so:
+
+[a]=[[1,1,0,0,1,0,0,0]]
+[b]=[[0,1,0,0,0,1,0,0]]
+…
+Et cetera. Now, reform this into a giant 9x8 matrix. This matrix remains constant. Here is where the actual algorithm comes in :D Get ready…
+
+Now, the game matrix starts clean, with 0s: [[0,0,0,0,0,0,0,0]]. These are the wins. Now, say player one selects position [a]. Add its matrix to the game matrix and you get [[1,1,0,0,1,0,0,0]]. Player two will subtract from the game matrix, so it tries to:
+1) Make a -3
+2) Make as many -2s as possible without leaving any 2s. If you leave 2 -2s, this will make a trap for next turn. If you leave a 2, then X will win next turn.
+3) Make as many 2s into 1s if you cannot do any of that. Remember, a 2 now will turn into a 3 the next move and 3 means X got 3 in a row!
+
+See how beautiful that is? For X, it follows the same algorithm, but use the negative of any of the numbers :) The really nice part is that:
+-You can easily include random choices of moves that fit the highest criterion.
+-When the game is over, use the winning matrix and any 3s or -3s are wins, so you will know exactly where to strike through for wins!
+
+Now, I would post my tic-tac-toe program, but I apparently never saved my final version (which was in english instead of french and had the bugs fixed). Instead, I will show you a screenie :)
