@@ -1,0 +1,13 @@
+button{
+	cursor: pointer;
+}
+
+.logo{
+
+}
+
+.controls > * {
+	width: 25%;
+	height: 50px;
+	display: inline-block;
+}
