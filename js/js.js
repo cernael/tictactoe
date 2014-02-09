@@ -1,4 +1,4 @@
-$(function(){
+//$(function(){
 	var Game = Object.createClass({
 		_class: "Game",
 		currentPlayer: null,
@@ -16,11 +16,14 @@ $(function(){
 				append('<div id="game"/>').
 				appendTo('body');
 
+			$(window).resize(this.setSize);
+
 
 			// Instigate click handlers to create relevant Board objects
 			$('#pvp').click(function(){
 				// Skapa board(depth 0), skapa två spelare, starta spelet
 				$('#game').html('');
+				alert('hej');
 			});
 			$('#pve').click(function(){
 				// Skapa board(depth 0), skapa spelare + AI, starta spelet
@@ -30,6 +33,28 @@ $(function(){
 				// Skapa board(depth 1), skapa två spelare, starta spelet
 				$('#game').html('');
 			});
+		},
+
+		setSize: function(){
+			if($(window).width() - $(window).height() >= 150){
+				this.size = Math.min($(window).height(),
+									 $(window).width()-200);
+				$('.controls').css({'width': '200px',
+									'height': '100%'});
+				$('.controls > *').css({'display': 'block',
+										'width': '100%'});
+
+			}
+			else{				
+				this.size = Math.min($(window).height()-50,
+									 $(window).width() );
+				$('.controls').css({'width': '100%',
+									'height': '50px'});
+				$('.controls > *').css({'display': 'inline-block',
+										'width': '25%'});
+			}
+			$('.game').css({'width': this.size,
+							'height': this.size});
 		}
 
 	});
@@ -65,4 +90,4 @@ $(function(){
 	})
 
 	var game = new Game;
-});
+//});
