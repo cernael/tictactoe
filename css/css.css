@@ -6,6 +6,14 @@ body html{
 	cursor: pointer;
 }
 
+#active{
+	background-color: #999;
+}
+
+.button:hover{
+	background-color: #ccc;
+}
+
 .logo{
 	width: 200px;
 	height: 50px;
@@ -18,10 +26,12 @@ body html{
 .controls{
 	background-color: #666;
 	height: 50px;
+	position: fixed;
 }
 
 .controls > * {
 	height: 50px;
 	padding: 10px;
 	box-sizing: border-box;
+	display: inline-block;
 }

@@ -5,22 +5,23 @@ $(function(){
 	var winCombos = [[1, 0, 0, 1, 0, 0, 1, 0], // Square-by-square win combo participation,
 					 [0, 1, 0, 1, 0, 0, 0, 0], // ordered by [H1, H2, H3, V1, V2, V3, D1, D2].
 					 [0, 0, 1, 1, 0, 0, 0, 1],
-					 [1, 0, 0, 0, 1, 0, 0, 0],
-					 [0, 1, 0, 0, 1, 0, 1, 1],
+					 [1, 0, 0, 0, 1, 0, 0, 0], // Squares are ordered in the following matrix
+					 [0, 1, 0, 0, 1, 0, 1, 1], // (as denoted by index in the winCombo array)
 					 [0, 0, 1, 0, 1, 0, 0, 0],
-					 [1, 0, 0, 0, 0, 1, 0, 1],
-					 [0, 1, 0, 0, 0, 1, 0, 0],
-					 [0, 0, 1, 0, 0, 1, 1, 0]];
+					 [1, 0, 0, 0, 0, 1, 0, 1], //  [0, 1, 2,
+					 [0, 1, 0, 0, 0, 1, 0, 0], //   3, 4, 5,
+					 [0, 0, 1, 0, 0, 1, 1, 0]];//   6, 7, 8]
 
 	var gameState = {
-		'currentPlayer': null,
+		'currentPlayer': 0, // Use as index of players array
 		'players': [],
+		'depth': 0,
 		'board': null
 	};
 
 	// Create board outline and game-type change buttons
 	$('<div class="controls"/>').
-		append('<div class="logo">&nbsp;</div>').
+		append('<div class="logo">PRETEND LOGO</div>').
 		append('<div class="button" id="pvp">Normal game</div>').
 		append('<div class="button" id="pve">AI game</div>').
 		append('<div class="button" id="upvp">Ultimate game</div>').
@@ -37,37 +38,45 @@ $(function(){
 	// Instigate click handlers to create relevant Board objects
 	$('#pvp').click(function(){
 		// Skapa board(depth 1), skapa två spelare, starta spelet
+		gameState.board = new Board(1);
+		gameState.players[0]( new Player() ); // !!! in-params, fix in accordance with class
+		gameState.players[1]( new Player() );
 		$('#game').html('');
-		alert('hej');
 	});
 	$('#pve').click(function(){
 		// Skapa board(depth 1), skapa spelare + AI, starta spelet
+		gameState.board = new Board(1);
+		gameState.players[0]( new Player() ); // !!! in-params, fix in accordance with class
+		gameState.players[1]( new AI() );
 		$('#game').html('');
 	});
 	$('#upvp').click(function(){
 		// Skapa board(depth 2), skapa två spelare, starta spelet
+		gameState.board = new Board(2);
+		gameState.players[0]( new Player() ); // !!! in-params, fix in accordance with class
+		gameState.players[1]( new Player() );
 		$('#game').html('');
 	});
 
 	function setSize(){
 		if($(window).width() - $(window).height() >= 150){
+			// Set sidebar layout
 			size = Math.min($(window).height(),
 								 $(window).width()-200);
 			$('.controls').css({'width': '200px',
 								'height': '100%'});
-			$('.controls > *').css({'display': 'block',
-									'width': '100%'});
+			$('.button').css('width', '100%');
 		}
-		else{				
+		else{
+			// Set banner layout
 			size = Math.min($(window).height()-50,
 								 $(window).width() );
 			$('.controls').css({'width': '100%',
 								'height': '50px'});
-			$('.controls > *').css({'display': 'inline-block',
-									'width': ($(window).width() - 200)/3});
+			$('.button').css('width', ($(window).width() - 200)/3);
 		}
 		$('.game').css({'width': size,
-						'height': size});
+						'height': size}); // Is this really what I want?
 	};
 
 	var Marker = Object.createClass({
@@ -80,6 +89,8 @@ $(function(){
 			this.parent = parent;
 			this.parentEl = this.parent.DOMel;
 			this.addToDOM();
+			this.claim();
+
 		},
 
 		addToDOM: function(){
@@ -88,19 +99,54 @@ $(function(){
 
 		css: function(x,y){
 			this.DOMel.css(x,y);
-  },
+		},
+
+		claim: function(){
+
+			$(this).click(function(){
+				$(this).css('background-color', 
+					gameState.players[gameState.currentPlayer].colour);
+				this.owner = currentPlayer;
+				this.parent.markProgress(this.pos);
+			});
+		}
 	})
 
 	var Board = Object.createClass({
 		_class: "Board",
 		_extends: Marker,
 		boardProgress: [0, 0, 0, 0, 0, 0, 0, 0],
-		squares: [],
+		nodes: [],
+
 
 		init: function (depth, pos, parent) {
 			this.depth = depth;
-			this._super(pos, parent);
+			this.pos = pos;
+			this.parent = parent;
+			this.parentEl = this.parent.DOMel;
+			if(this.depth > 1){
+				for (var i = 0; i < 9; i++) {
+					this.nodes.append(new Board((this.depth-1), i, this) );
+				};
+			}
+			else{
+				for (var i = 0; i < 9; i++) {
+					this.nodes.append(new Marker(i, this) );
+				};
+			}
 
+			// Create table, append nodes, add to DOM. Maybe kill the addToDOM-method.
+
+			this.addToDOM();
+
+		},
+
+		markProgress: function(pos){
+			// To be called from nodes, when they become owned
+			me = this.boardProgress;
+			for(var i = 0; i < me.length; i++){
+				//Something here !!!
+			};
 		}
 	});
 
@@ -111,7 +157,7 @@ $(function(){
 			this.value = value;
 		},
 
-		move: 
+
 	});
 
 	var AI = Object.createClass({
@@ -121,7 +167,8 @@ $(function(){
 			this.colour = colour;
 			this.value = value;
 		},
-
+		// Shit, behöver AI-funktionen att AI-klassen ärver en move-metod från Player?
+		// I så fall måste jag nog ha dubbla click handlers ändå.
 	});
 
 });
