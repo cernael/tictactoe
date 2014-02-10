@@ -2,12 +2,13 @@ body html{
 	height: 100%;
 }
 
-button{
+.button{
 	cursor: pointer;
 }
 
 .logo{
-
+	width: 200px;
+	height: 50px;
 }
 
 .game{
@@ -20,7 +21,7 @@ button{
 }
 
 .controls > * {
-	height: 30px;
-	margin: 10px;
+	height: 50px;
+	padding: 10px;
 	box-sizing: border-box;
 }
