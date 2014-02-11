@@ -39,8 +39,8 @@ $(function(){
 	$('#pvp').click(function(){
 		// Skapa board(depth 1), skapa två spelare, starta spelet
 		gameState.board = new Board(1);
-		gameState.players[0]( new Player() ); // !!! in-params, fix in accordance with class
-		gameState.players[1]( new Player() );
+		gameState.players[0] = new Player(); // !!! in-params, fix in accordance with class
+		gameState.players[1] = new Player();
 		$('#game').html('');
 	});
 	$('#pve').click(function(){
@@ -88,13 +88,9 @@ $(function(){
 			this.pos = pos;
 			this.parent = parent;
 			this.parentEl = this.parent.DOMel;
-			this.addToDOM();
 			this.claim();
-
-		},
-
-		addToDOM: function(){
 			this.DOMel = $(this.html).appendTo(this.parentEl);
+
 		},
 
 		css: function(x,y){
@@ -122,28 +118,50 @@ $(function(){
 		init: function (depth, pos, parent) {
 			this.depth = depth;
 			this.pos = pos;
-			this.parent = parent;
-			this.parentEl = this.parent.DOMel;
+			if(parent){
+				this.parent = parent;
+				this.parentEl = this.parent.DOMel;
+			}
+			else{
+				this.parentEl = $('#game');
+			}
 			if(this.depth > 1){
 				for (var i = 0; i < 9; i++) {
-					this.nodes.append(new Board((this.depth-1), i, this) );
+					this.nodes.push(new Board((this.depth-1), i, this) );
 				};
 			}
 			else{
 				for (var i = 0; i < 9; i++) {
-					this.nodes.append(new Marker(i, this) );
+					this.nodes.push(new Marker(i, this) );
 				};
 			}
-
-			// Create table, append nodes, add to DOM. Maybe kill the addToDOM-method.
 
 			this.addToDOM();
 
 		},
 
+		addToDOM: function(){
+
+			var me = $('<table/>');
+			for(var i = 0; i < 3; i++){
+				var tr = $('<tr/>');
+				for (var j = 0; j < 3; j++) {
+					$('<td/>').append(this.nodes[i * 3 + j]).appendTo(tr);
+				};
+				tr.appendTo(me);
+			};
+			console.log(this.parentEl.children().length)
+			console.log(me, 'hi', this.parentEl)
+			
+			me.appendTo(this.parentEl);
+				console.log(this.parentEl.children().length)
+
+			throw("Enough!") // Varihelvete tar jag bort allt från #game igen?!
+		},
+
 		markProgress: function(pos){
 			// To be called from nodes, when they become owned
-			me = this.boardProgress;
+			var me = this.boardProgress;
 			for(var i = 0; i < me.length; i++){
 				//Something here !!!
 			};
@@ -166,9 +184,10 @@ $(function(){
 		init: function(colour, value){
 			this.colour = colour;
 			this.value = value;
-		},
+		}
 		// Shit, behöver AI-funktionen att AI-klassen ärver en move-metod från Player?
 		// I så fall måste jag nog ha dubbla click handlers ändå.
+		//	$('.cell').index(8).click()
 	});
 
 });
