@@ -1,13 +1,13 @@
 var size;
 
 var winCombos = [[1, 0, 0, 1, 0, 0, 1, 0], // Square-by-square win combo participation,
-				 [0, 0, 1, 1, 0, 0, 0, 1],
-				 [0, 1, 0, 1, 0, 0, 0, 0], // ordered by [H1, H2, H3, V1, V2, V3, D1, D2].
-				 [1, 0, 0, 0, 1, 0, 0, 0], // Squares are ordered in the following matrix
+				 [1, 0, 0, 0, 1, 0, 0, 0], // ordered by [H1, H2, H3, V1, V2, V3, D1, D2].
+				 [1, 0, 0, 0, 0, 1, 0, 1],
+				 [0, 1, 0, 1, 0, 0, 0, 0], // Squares are ordered in the following matrix
 				 [0, 1, 0, 0, 1, 0, 1, 1], // (as denoted by index in the winCombo array)
-				 [0, 0, 1, 0, 1, 0, 0, 0],
-				 [1, 0, 0, 0, 0, 1, 0, 1], //  [0, 1, 2,
-				 [0, 1, 0, 0, 0, 1, 0, 0], //   3, 4, 5,
+				 [0, 1, 0, 0, 0, 1, 0, 0],
+				 [0, 0, 1, 1, 0, 0, 0, 1], //  [0, 1, 2,
+				 [0, 0, 1, 0, 1, 0, 0, 0], //   3, 4, 5,
 				 [0, 0, 1, 0, 0, 1, 1, 0]];//   6, 7, 8]
 
 var gameState = {
@@ -39,7 +39,7 @@ $(function(){
 		// Skapa board(depth 1), skapa två spelare, starta spelet
 		$('#game').html('');
 		gameState.board = new Board(1);
-		gameState.players[0] = new Player('#f00', 1); // !!! in-params, fix in accordance with class
+		gameState.players[0] = new Player('#f00', 1); 
 		gameState.players[1] = new Player('#0ff', -1);
 		gameState.sizeInCells = 3;
 		setSize();
@@ -48,7 +48,7 @@ $(function(){
 		// Skapa board(depth 1), skapa spelare + AI, starta spelet
 		$('#game').html('');
 		gameState.board = new Board(1);
-		gameState.players[0] = new Player('#f00', 1); // !!! in-params, fix in accordance with class
+		gameState.players[0] = new Player('#f00', 1);
 		gameState.players[1] = new AI('#0ff', -1);
 		gameState.sizeInCells = 3;
 		setSize();
@@ -57,7 +57,7 @@ $(function(){
 		// Skapa board(depth 2), skapa två spelare, starta spelet
 		$('#game').html('');
 		gameState.board = new Board(2);
-		gameState.players[0] = new Player('#f00', 1); // !!! in-params, fix in accordance with class
+		gameState.players[0] = new Player('#f00', 1);
 		gameState.players[1] = new Player('#0ff', -1);
 		gameState.sizeInCells = 9;
 		setSize();
@@ -116,14 +116,16 @@ var Marker = Object.createClass({
 	},
 
 	claim: function(){
-
-		this.DOMel.click(function(){
+		var me = this;
+		me.DOMel.click(function(){
+			if(me.owner){return};
 			$(this).css('background-color', 
 				gameState.players[gameState.currentPlayer].colour);
-			this.owner = gameState.players[gameState.currentPlayer];
-			console.log(gameState); //
-			this.parent.markProgress(this.pos);
-			
+			me.owner = gameState.players[gameState.currentPlayer];
+			console.log(gameState); // Prins JSON to console, as per instructions
+			me.parent.markProgress(me.pos);
+			gameState.currentPlayer = gameState.currentPlayer ? 0 : 1;
+			gameState.players[gameState.currentPlayer].startTurn();
 		});
 	}
 })
@@ -155,7 +157,7 @@ var Board = Object.createClass({
 		}
 		else{
 			for (var i = 0; i < 9; i++) {
-				this.nodes.push(new Marker(i, this.DOMel) );
+				this.nodes.push(new Marker(i, this) );
 			};
 		}
 		this.addToDOM();
@@ -170,7 +172,6 @@ var Board = Object.createClass({
 			for (var j = 0; j < 3; j++) {
 				var div = $('<div class="cell"/>').append(this.nodes[i * 3 + j].DOMel);
 				$('<td/>').append(div).appendTo(tr);
-				console.log(this.nodes[i*3+j])
 			};
 			tr.appendTo(tb);
 		};
@@ -182,8 +183,10 @@ var Board = Object.createClass({
 		// To be called from nodes, when they become owned
 		var me = this.boardProgress;
 		for(var i = 0; i < me.length; i++){
-			//Something here !!!
+			me[i] += winCombos[pos][i] * gameState.
+										 players[gameState.currentPlayer].value;
 		};
+		
 	}
 });
 
@@ -193,6 +196,9 @@ var Player = Object.createClass({
 		this.colour = colour;
 		this.value = value;
 	},
+	startTurn: function(){
+		
+	}
 
 
 });
