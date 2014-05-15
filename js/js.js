@@ -6,19 +6,23 @@ var winCombos = [[1, 0, 0, 1, 0, 0, 1, 0], // Square-by-square win combo partici
 				 [0, 1, 0, 1, 0, 0, 0, 0], // Squares are ordered in the following matrix
 				 [0, 1, 0, 0, 1, 0, 1, 1], // (as denoted by index in the winCombo array)
 				 [0, 1, 0, 0, 0, 1, 0, 0],
-				 [0, 0, 1, 1, 0, 0, 0, 1], //  [0, 1, 2,
-				 [0, 0, 1, 0, 1, 0, 0, 0], //   3, 4, 5,
-				 [0, 0, 1, 0, 0, 1, 1, 0]];//   6, 7, 8]
+				 [0, 0, 1, 1, 0, 0, 0, 1], // [[0, 1, 2],
+				 [0, 0, 1, 0, 1, 0, 0, 0], //  [3, 4, 5],
+				 [0, 0, 1, 0, 0, 1, 1, 0] //  [6, 7, 8]]
+];
 
 var gameState = {
 	'currentPlayer': 0, // Use as index of players array
-	'players': [],
 	'sizeInCells': 0,
-	'board': null
+	'board': []
 };
 
+var players = [];
+
+var board;
+
 $(function(){
-	// Create board outline and game-type change buttons
+s	// Create board outline and game-type change buttons
 	$('<div class="controls"/>').
 		append('<div class="logo">PRETEND LOGO</div>').
 		append('<div class="button" id="pvp">Normal game</div>').
@@ -38,27 +42,27 @@ $(function(){
 	$('#pvp').click(function(){
 		// Skapa board(depth 1), skapa två spelare, starta spelet
 		$('#game').html('');
-		gameState.board = new Board(1);
-		gameState.players[0] = new Player('#f00', 1); 
-		gameState.players[1] = new Player('#0ff', -1);
+		board = new Board(1);
+		players[0] = new Player('#f00', 1); 
+		players[1] = new Player('#0ff', -1);
 		gameState.sizeInCells = 3;
 		setSize();
 		});
 	$('#pve').click(function(){
 		// Skapa board(depth 1), skapa spelare + AI, starta spelet
 		$('#game').html('');
-		gameState.board = new Board(1);
-		gameState.players[0] = new Player('#f00', 1);
-		gameState.players[1] = new AI('#0ff', -1);
+		board = new Board(1);
+		players[0] = new Player('#f00', 1);
+		players[1] = new AI('#0ff', -1);
 		gameState.sizeInCells = 3;
 		setSize();
 	});
 	$('#upvp').click(function(){
 		// Skapa board(depth 2), skapa två spelare, starta spelet
 		$('#game').html('');
-		gameState.board = new Board(2);
-		gameState.players[0] = new Player('#f00', 1);
-		gameState.players[1] = new Player('#0ff', -1);
+		board = new Board(2);
+		players[0] = new Player('#f00', 1);
+		players[1] = new Player('#0ff', -1);
 		gameState.sizeInCells = 9;
 		setSize();
 	});
@@ -85,7 +89,7 @@ function setSize(){
 		$('.main').css({'top': '50px',
 						'left': '0'})
 	}
-	var markerSize = size * 0.6 / gameState.sizeInCells
+	var markerSize = size * 0.6 / gameState.sizeInCells;
 	$('.marker').css({'width': markerSize,
 					'height': markerSize,
 					'margin': size * 0.01,
@@ -120,12 +124,12 @@ var Marker = Object.createClass({
 		me.DOMel.click(function(){
 			if(me.owner){return};
 			$(this).css('background-color', 
-				gameState.players[gameState.currentPlayer].colour);
-			me.owner = gameState.players[gameState.currentPlayer];
+				players[gameState.currentPlayer].colour);
+			me.owner = players[gameState.currentPlayer];
 			console.log(gameState); // Prins JSON to console, as per instructions
 			me.parent.markProgress(me.pos);
 			gameState.currentPlayer = gameState.currentPlayer ? 0 : 1;
-			gameState.players[gameState.currentPlayer].startTurn();
+			players[gameState.currentPlayer].startTurn();
 		});
 	}
 })
@@ -183,9 +187,9 @@ var Board = Object.createClass({
 		// To be called from nodes, when they become owned
 		var me = this.boardProgress;
 		for(var i = 0; i < me.length; i++){
-			me[i] += winCombos[pos][i] * gameState.
-										 players[gameState.currentPlayer].value;
+			me[i] += winCombos[pos][i] * players[gameState.currentPlayer].value;
 		};
+		// checkForWin()
 		
 	}
 });
@@ -199,8 +203,6 @@ var Player = Object.createClass({
 	startTurn: function(){
 		
 	}
-
-
 });
 
 var AI = Object.createClass({
@@ -209,8 +211,55 @@ var AI = Object.createClass({
 	init: function(colour, value){
 		this.colour = colour;
 		this.value = value;
+	},
+	startTurn: function(){
+		$('.marker')[8].click();
 	}
-	//
-	//	$('.marker').index(8).click()
 });
 
+function restoreGameState (json){
+	// something or other
+};
+
+/*
+// Vi skulle kunna uttrycka ett tic-tac-toe
+// bräde som en tom array med 9 element
+// (från början tomma men efterhand placerar
+// vi ett "X" eller ett "O" i dem)
+var board = new Array(9);
+ 
+// Det finns åtta olika vinstmöjligheter
+var winningCombos = [
+  [0,1,2], [3,4,5], [6,7,8], // horisontella
+  [0,3,6], [1,4,7], [2,5,8], // vertikala
+  [0,4,8], [2,4,6] // diagonala
+];
+ 
+// Kolla efter en vinst
+function checkForWin(){
+  for(var i = 0; i < winningCombos.length;i++){
+    var c = winningCombos[i];
+    if(
+      board[c[0]] &&
+      board[c[0]] == board[c[1]] && 
+      board[c[1]] == board[c[2]]
+    ){
+      return board[c[0]];
+    }
+  }
+  return false;
+}
+ 
+// Kolla om brädet är fullt
+function checkIfBoardFull(){
+  for(var i = 0; i < board.length; i++){
+    if(!board[i]){return false;}
+  }
+  return true;
+}
+ 
+// Kolla om det är oavgjort
+function isDraw(){
+  return checkIfBoardFull() && !checkForWin();
+}
+*/
