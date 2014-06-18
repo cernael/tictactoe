@@ -22,7 +22,7 @@ var players = [];
 var board;
 
 $(function(){
-s	// Create board outline and game-type change buttons
+	// Create board outline and game-type change buttons
 	$('<div class="controls"/>').
 		append('<div class="logo">PRETEND LOGO</div>').
 		append('<div class="button" id="pvp">Normal game</div>').
@@ -43,27 +43,37 @@ s	// Create board outline and game-type change buttons
 		// Skapa board(depth 1), skapa två spelare, starta spelet
 		$('#game').html('');
 		board = new Board(1);
-		players[0] = new Player('#f00', 1); 
-		players[1] = new Player('#0ff', -1);
+		players[0] = new Player('#f00', 1, 'Player 1'); 
+		players[1] = new Player('#0ff', -1, 'Player 2');
 		gameState.sizeInCells = 3;
+		gameState.currentPlayer = 0;
+		gameState.board = new Array(9);
 		setSize();
 		});
 	$('#pve').click(function(){
 		// Skapa board(depth 1), skapa spelare + AI, starta spelet
 		$('#game').html('');
 		board = new Board(1);
-		players[0] = new Player('#f00', 1);
-		players[1] = new AI('#0ff', -1);
+		players[0] = new Player('#f00', 1, 'Player 1'); 
+		players[1] = new AI('#0ff', -1, 'Player 2');
 		gameState.sizeInCells = 3;
+		gameState.currentPlayer = 0;
+		gameState.board = new Array(9);
 		setSize();
 	});
 	$('#upvp').click(function(){
 		// Skapa board(depth 2), skapa två spelare, starta spelet
 		$('#game').html('');
 		board = new Board(2);
-		players[0] = new Player('#f00', 1);
-		players[1] = new Player('#0ff', -1);
+		players[0] = new Player('#f00', 1, 'Player 1'); 
+		players[1] = new Player('#0ff', -1, 'Player 2');
 		gameState.sizeInCells = 9;
+		gameState.currentPlayer = 0;
+		gameState.board = new Array(9);
+		for(var i=0; i < 9; i++){
+			gameState.board[i] = new Array(9);
+		};
+
 		setSize();
 	});
 });
@@ -121,13 +131,15 @@ var Marker = Object.createClass({
 
 	claim: function(){
 		var me = this;
-		me.DOMel.click(function(){
+		me.DOMel.bind('click', function(){
 			if(me.owner){return};
+			var cp = gameState.currentPlayer;
 			$(this).css('background-color', 
-				players[gameState.currentPlayer].colour);
-			me.owner = players[gameState.currentPlayer];
+				players[cp].colour);
+			me.owner = players[cp];
 			console.log(gameState); // Prins JSON to console, as per instructions
 			me.parent.markProgress(me.pos);
+			console.log(gameState.board);
 			gameState.currentPlayer = gameState.currentPlayer ? 0 : 1;
 			players[gameState.currentPlayer].startTurn();
 		});
@@ -189,16 +201,27 @@ var Board = Object.createClass({
 		for(var i = 0; i < me.length; i++){
 			me[i] += winCombos[pos][i] * players[gameState.currentPlayer].value;
 		};
-		// checkForWin()
+		if(this.checkForWin()){
+			
+			alert(players[gameState.currentPlayer].name + ' wins!');
+			for(var i = 0; i < this.nodes.length; i++){
+				this.nodes[i].DOMel.unbind('click');
+			};
+		};
 		
+	},
+	checkForWin: function() {
+		var winValue = 3 * players[gameState.currentPlayer].value;
+		return this.boardProgress.indexOf(winValue) >= 0;
 	}
 });
 
 var Player = Object.createClass({
 	_class: "Player",
-	init: function(colour, value){
+	init: function(colour, value, name){
 		this.colour = colour;
 		this.value = value;
+		this.name = name;
 	},
 	startTurn: function(){
 		
