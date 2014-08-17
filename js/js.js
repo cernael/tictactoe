@@ -13,8 +13,9 @@ var winCombos = [[1, 0, 0, 1, 0, 0, 1, 0], // Square-by-square win combo partici
 
 var gameState = {
 	'currentPlayer': 0, // Use as index of players array
-	'sizeInCells': 0,
-	'board': []
+	'nestDepth': 0,
+	'board': [],
+	'gameType': ''
 };
 
 var players = [];
@@ -42,47 +43,58 @@ $(function(){
 	$('#pvp').click(function(){
 		// Skapa board(depth 1), skapa två spelare, starta spelet
 		$('#game').html('');
-		board = new Board(1);
-		players[0] = new Player('#f00', 1, 'Player 1'); 
-		players[1] = new Player('#0ff', -1, 'Player 2');
-		gameState.sizeInCells = 3;
 		gameState.currentPlayer = 0;
+		gameState.nestDepth = 1;
 		gameState.board = new Array(9);
+		gameState.gameType = 'pvp';
+		board = new Board();
+		setupPlayers(false);
 		setSize();
 		});
 	$('#pve').click(function(){
 		// Skapa board(depth 1), skapa spelare + AI, starta spelet
 		$('#game').html('');
-		board = new Board(1);
-		players[0] = new Player('#f00', 1, 'Player 1'); 
-		players[1] = new AI('#0ff', -1, 'Player 2');
-		gameState.sizeInCells = 3;
 		gameState.currentPlayer = 0;
+		gameState.nestDepth = 1;
 		gameState.board = new Array(9);
+		gameState.gameType = 'pve'
+		board = new Board();
+		setupPlayers(true);
 		setSize();
 	});
 	$('#upvp').click(function(){
 		// Skapa board(depth 2), skapa två spelare, starta spelet
 		$('#game').html('');
-		board = new Board(2);
-		players[0] = new Player('#f00', 1, 'Player 1'); 
-		players[1] = new Player('#0ff', -1, 'Player 2');
-		gameState.sizeInCells = 9;
+		gameState.nestDepth = 2;
 		gameState.currentPlayer = 0;
 		gameState.board = new Array(9);
 		for(var i=0; i < 9; i++){
 			gameState.board[i] = new Array(9);
 		};
-
+		gameState.gameType = 'upvp';
+		board = new Board();
+		setupPlayers(false);
 		setSize();
 	});
 });
 
+function setupPlayers(aiGame){
+	if(aiGame){
+		players[0] = new Player('#f00', 1, 'Player'); 
+		players[1] = new AI('#00f', -1, 'The computer');
+	}
+	else{
+		players[0] = new Player('#f00', 1, 'Player 1'); 
+		players[1] = new Player('#00f', -1, 'Player 2');
+	}
+}
+
 function setSize(){
 	if($(window).width() - $(window).height() >= 150){
-		// Set sidebar layout
+		// Find size
 		size = Math.min($(window).height(),
 							 $(window).width()-200);
+		// Set sidebar layout
 		$('.controls').css({'width': '200px',
 							'height': '100%'});
 		$('.button').css('width', '100%');
@@ -90,16 +102,19 @@ function setSize(){
 						'left': '200px'})
 	}
 	else{
-		// Set banner layout
+		// Find size
 		size = Math.min($(window).height()-50,
 							 $(window).width() );
+		// Set banner layout
 		$('.controls').css({'width': '100%',
 							'height': '50px'});
 		$('.button').css('width', ($(window).width() - 200)/3);
 		$('.main').css({'top': '50px',
 						'left': '0'})
 	}
-	var markerSize = size * 0.6 / gameState.sizeInCells;
+
+	// Old way, bad way, bottom-up from markers
+	var markerSize = size * 0.6 / (Math.pow(3, gameState.nestDepth));
 	$('.marker').css({'width': markerSize,
 					'height': markerSize,
 					'margin': size * 0.01,
@@ -107,9 +122,13 @@ function setSize(){
 					'-webkit-border-radius': markerSize/2,
 					'-moz-border-radius': markerSize/2,
 					'border-radius': markerSize/2
-				}); 
+					}); 
 	$('table').css('margin', size * 0.025);
-	//$('.cell').css('padding', size * 0.01);
+
+	// New way, better way?, top-down from #game
+	if(board){
+		board.setSize(size);
+	}
 };
 
 var Marker = Object.createClass({
@@ -133,16 +152,19 @@ var Marker = Object.createClass({
 		var me = this;
 		me.DOMel.bind('click', function(){
 			if(me.owner){return};
-			var cp = gameState.currentPlayer;
 			$(this).css('background-color', 
-				players[cp].colour);
-			me.owner = players[cp];
+				players[gameState.currentPlayer].colour);
+			me.owner = players[gameState.currentPlayer];
 			console.log(gameState); // Prins JSON to console, as per instructions
 			me.parent.markProgress(me.pos);
 			console.log(gameState.board);
 			gameState.currentPlayer = gameState.currentPlayer ? 0 : 1;
 			players[gameState.currentPlayer].startTurn();
 		});
+	},
+
+	setSize: function(size){
+		jgjgjgjg
 	}
 })
 
@@ -155,7 +177,7 @@ var Board = Object.createClass({
 
 
 	init: function (depth, pos, parent) {
-		this.depth = depth;
+		this.depth = depth || gameState.nestDepth;
 		this.pos = pos;
 
 		if(parent){
@@ -195,6 +217,13 @@ var Board = Object.createClass({
 
 	},
 
+	setSize: function(size){
+		var nodeSize = size/3; // subtract for padding and margin and stuff too
+		for (var i = 0; i < this.nodes.length; i++) {
+			this.nodes[i].setSize(nodeSize)
+;		};
+	},
+
 	markProgress: function(pos){
 		// To be called from nodes, when they become owned
 		var me = this.boardProgress;
@@ -231,9 +260,10 @@ var Player = Object.createClass({
 var AI = Object.createClass({
 	_class: "AI",
 	_extends: Player,
-	init: function(colour, value){
+	init: function(colour, value, name){
 		this.colour = colour;
 		this.value = value;
+		this.name = name;
 	},
 	startTurn: function(){
 		$('.marker')[8].click();
@@ -241,6 +271,7 @@ var AI = Object.createClass({
 });
 
 function restoreGameState (json){
+	gameState = json;
 	// something or other
 };
 
@@ -285,4 +316,14 @@ function checkIfBoardFull(){
 function isDraw(){
   return checkIfBoardFull() && !checkForWin();
 }
+*/
+
+/*	TODO:
+	Bygg restoreGameState()
+	Bygg AI-metod
+	Ev. fixa upvp
+	Fixa halvtransparents div'ar för att blockera bräden vid vinst eller delbrädeserövring
+	Ev. göra setSize() till Board- och Marker-metod som anropas rekursivt
+	Starta nytt spel och restoreGameState är ganska liknande funktioner. Faktorisera.
+	Player.startTurn() ?
 */
